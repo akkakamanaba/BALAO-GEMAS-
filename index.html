@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Death Store Pro</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0a0000;
+  color: white;
+}
+
+/* TOPO */
+.topo {
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: linear-gradient(90deg, #8b0000, black);
+  border-bottom: 2px solid red;
+}
+
+.sacar-btn {
+  background: purple;
+  padding: 8px 15px;
+  border-radius: 10px;
+}
+
+/* LOGIN */
+.login {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-box {
+  background: #111;
+  padding: 20px;
+  border-radius: 15px;
+  border: 1px solid red;
+  box-shadow: 0 0 20px red;
+  text-align: center;
+}
+
+/* GAME */
+.container {
+  display: none;
+  padding: 20px;
+  text-align: center;
+}
+
+.game-area {
+  height: 300px;
+  border: 2px solid red;
+  border-radius: 15px;
+  position: relative;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+/* BALÃO PROFISSIONAL */
+#balao {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 100px;
+  background: radial-gradient(circle at 30% 30%, #ff4d4d, #8b0000);
+  border-radius: 50% 50% 45% 45%;
+  box-shadow: 0 0 20px red, inset 0 0 15px #ff0000;
+  transition: transform 0.1s;
+}
+
+#balao::before {
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  width: 15px;
+  height: 20px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 50%;
+}
+
+#balao::after {
+  content: "";
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  width: 2px;
+  height: 20px;
+  background: white;
+  transform: translateX(-50%);
+}
+
+button {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  margin-top: 10px;
+  background: red;
+  color: white;
+}
+
+.segurar { background: green; }
+
+/* RESGATE */
+#resgateTela {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.95);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.box {
+  background: #111;
+  padding: 20px;
+  border-radius: 15px;
+  border: 2px solid red;
+  box-shadow: 0 0 20px red;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login" id="login">
+  <div class="login-box">
+    <h2>DEATH STORE</h2>
+    <input id="keyInput" placeholder="Digite sua KEY">
+    <br>
+    <button onclick="entrar()">Entrar</button>
+  </div>
+</div>
+
+<div class="topo" id="topo">
+  <span>💎 <span id="saldo">0</span></span>
+  <button class="sacar-btn" onclick="resgatar()">SACAR</button>
+</div>
+
+<div class="container" id="game">
+  <p>x<span id="multi">1.000.000</span></p>
+
+  <div class="game-area">
+    <div id="balao"></div>
+  </div>
+
+  <button id="btnSegurar" class="segurar">SEGURAR</button>
+</div>
+
+<div id="resgateTela">
+  <div class="box">
+    <h2>RESGATE</h2>
+    <h1 id="valor">0</h1>
+    <h2 id="codigo"></h2>
+    <p>Tire print</p>
+    <button onclick="fechar()">Fechar</button>
+  </div>
+</div>
+
+<script>
+let saldo = 0;
+let multi = 1000000;
+let intervalo;
+let subindo = false;
+
+const keys = { "DS-A9K8":100, "VIP-999":1000 };
+
+function entrar(){
+  let key = document.getElementById("keyInput").value;
+  if(keys[key]){
+    saldo += keys[key];
+    localStorage.setItem("saldo", saldo);
+    document.getElementById("login").style.display="none";
+    document.getElementById("game").style.display="block";
+    document.getElementById("topo").style.display="flex";
+    atualizar();
+  } else alert("Key inválida");
+}
+
+function atualizar(){
+  document.getElementById("saldo").innerText=saldo;
+}
+
+window.onload=()=>{
+  let s=localStorage.getItem("saldo");
+  if(s){
+    saldo=parseInt(s);
+    document.getElementById("login").style.display="none";
+    document.getElementById("game").style.display="block";
+    document.getElementById("topo").style.display="flex";
+    atualizar();
+  }
+}
+
+const balao=document.getElementById("balao");
+const btn=document.getElementById("btnSegurar");
+
+btn.addEventListener("mousedown", iniciar);
+btn.addEventListener("mouseup", parar);
+btn.addEventListener("touchstart", iniciar);
+btn.addEventListener("touchend", parar);
+
+function iniciar(){
+  subindo=true;
+  intervalo=setInterval(()=>{
+    if(!subindo)return;
+    multi++;
+    document.getElementById("multi").innerText=multi.toLocaleString();
+    let pos=balao.offsetTop||0;
+    balao.style.top=(pos-5)+"px";
+    balao.style.transform="translateX(-50%) scale("+(1+(multi-1000000)/3000000)+")";
+  },50);
+}
+
+function parar(){
+  subindo=false;
+  clearInterval(intervalo);
+  let chance=Math.random();
+  let ganho=Math.floor(saldo*(multi/1000000));
+  if(chance<0.3){ saldo=0; alert("💣 Perdeu tudo"); }
+  else{ saldo+=ganho; alert("💎 "+ganho); }
+  localStorage.setItem("saldo",saldo);
+  atualizar();
+  multi=1000000;
+  document.getElementById("multi").innerText=multi.toLocaleString();
+  balao.style.top="auto"; balao.style.bottom="0";
+}
+
+function resgatar(){
+  if(saldo<=0)return alert("Sem saldo");
+  let cod="DS-"+Math.random().toString(36).substr(2,6).toUpperCase();
+  let total=saldo;
+  saldo=0;
+  localStorage.setItem("saldo",saldo);
+  atualizar();
+  document.getElementById("resgateTela").style.display="flex";
+  document.getElementById("valor").innerText=total;
+  document.getElementById("codigo").innerText=cod;
+}
+
+function fechar(){
+  document.getElementById("resgateTela").style.display="none";
+}
+</script>
+
+</body>
+</html>
